@@ -1,0 +1,4 @@
+.chalice/*
+myvenv/*
+__pycache__
+.idea
