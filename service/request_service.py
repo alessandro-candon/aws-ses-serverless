@@ -6,6 +6,7 @@ from pony.orm import db_session
 from entity.schema import Mail, Bounce, Destination
 from service.bounce_service import BounceService, BOUNCE
 from service.complaint_service import COMPLAINT, ComplaintService
+from service.datetime import AwsDatetime
 
 
 @db_session
@@ -18,10 +19,10 @@ class AwsRequestService:
     def __init__(self, json_response):
         self.response = json.loads(json_response)
         self.mail = self.create_mail_instance(self.response['mail'])
-        self.response_notification_type[self.response['notificationType']](self.response['bounce'])
+        self.response_notification_type[self.response['notificationType']](self.mail, self.response['bounce'])
 
     def create_mail_instance(self, mail_r):
-        mail = Mail(timestamp=self.convert_aws_timestamp(mail_r['timestamp']))
+        mail = Mail(timestamp=AwsDatetime.convert_aws_timestamp(mail_r['timestamp']))
         mail.source = mail_r.get('source', '')
         mail.source_arn = mail_r.get('sourceArn', '')
         mail.source_ip = mail_r.get('sourceIp', '')

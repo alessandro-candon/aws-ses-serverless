@@ -3,7 +3,7 @@ from datetime import datetime
 
 db = Database()
 
-db.bind(provider='postgres', user='postgres', password='postgres', host='127.0.0.1', database='awstest')
+db.bind(provider='postgres', user='postgres', password='postgres', host='0.0.0.0', port=5433, database='awsses')
 
 
 class Destination(db.Entity):
