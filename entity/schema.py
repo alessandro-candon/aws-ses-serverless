@@ -79,6 +79,7 @@ def define_database(env):
     db_params = App.get_db_configuration(env)
     db = Database(**db_params)
     define_entities(db)
+    db.generate_mapping(create_tables=True)
     return db
 
 

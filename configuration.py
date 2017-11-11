@@ -1,3 +1,6 @@
+ENV = 'test'
+
+
 class App:
     __db_config = {
         'prod': dict(

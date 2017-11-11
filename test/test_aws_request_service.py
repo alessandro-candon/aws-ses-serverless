@@ -13,6 +13,6 @@ class AwsRequestServiceTest(CommonTestCase):
 
     @data_provider(responses)
     def test_save_request_to_db(self, json_response):
-        # aws = AwsRequestService(json_response)
-        self.assertEqual('foo'.upper(), 'FOO')
+        aws = AwsRequestService(json_response)
+        # self.assertEqual('foo'.upper(), 'FOO')
 

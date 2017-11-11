@@ -6,8 +6,8 @@ BOUNCE = 'Bounce'
 
 class BounceService:
     @staticmethod
-    def parse_and_save_bounce_instance(mail, bounce_r, database):
-        bounce = database.Bounce(timestamp=AwsDatetime.convert_aws_timestamp(bounce_r['timestamp']))
+    def parse_and_save_bounce_instance(mail, bounce_r):
+        bounce = Bounce(timestamp=AwsDatetime.convert_aws_timestamp(bounce_r['timestamp']))
         bounce.bounce_type = bounce_r['bounceType']
         bounce.bounce_sub_type = bounce_r.get('bounceSubType')
         bounce.feedback_id = bounce_r.get('feedbackId')
