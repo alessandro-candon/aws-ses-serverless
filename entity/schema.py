@@ -5,6 +5,7 @@ from configuration import App
 
 
 def define_entities(database):
+
     class Destination(database.Entity):
         email = Required(str, unique=True)
         bounces = Set('Bounce')

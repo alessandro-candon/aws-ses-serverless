@@ -1,8 +1,7 @@
 import unittest
 
 from configuration import ENV
-from entity.fixtures import populate_db
-from entity.schema import mapping_database, define_database
+from entity.schema import  define_database
 
 
 class CommonTestCase(unittest.TestCase):

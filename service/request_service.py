@@ -10,19 +10,18 @@ from service.datetime import AwsDatetime
 
 
 class AwsRequestService:
-
-    response_notification_type = {
-        BOUNCE: BounceService.parse_and_save_bounce_instance,
-        COMPLAINT: ComplaintService.parse_and_save_complaint_instance,
-        DELIVERY: DeliveryService.parse_and_save_delivery_instance,
-    }
-
     def __init__(self, json_response):
         self.database = define_database(ENV)
         self.response = json.loads(json_response)
         self.mail = self.create_mail_instance(self.response['mail'])
-        self.response_notification_type[self.response['notificationType']](
-            self.mail, self.response[self.response['notificationType'].lower()]
+        response_notification_type = {
+            BOUNCE: BounceService(),
+            COMPLAINT: ComplaintService.parse_and_save_complaint_instance,
+            DELIVERY: DeliveryService.parse_and_save_delivery_instance,
+        }
+        response_notification_type[self.response['notificationType']].parse_and_save_instance(
+            self.mail,
+            self.response[self.response['notificationType'].lower()]
         )
 
     @db_session
@@ -35,4 +34,5 @@ class AwsRequestService:
         mail.message_id = mail_r.get('messageId', '')
         mail.headers_truncated = mail_r.get('headersTruncated', '')
         mail.headers = mail_r.get('headers', '')
+        self.database.commit()
         return mail
