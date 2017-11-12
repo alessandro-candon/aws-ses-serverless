@@ -1,18 +1,73 @@
-from unittest_data_provider import data_provider
+import datetime
+import json
+
+from pony.orm import db_session
+
+from service.bounce_service import BounceService
 from service.request_service import AwsRequestService
 from test.common_test_case import CommonTestCase
 
 
-class AwsRequestServiceTest(CommonTestCase):
-    responses = lambda: (
-        ('{"notificationType":"Bounce","bounce":{"bounceType":"Permanent","bounceSubType":"General","bouncedRecipients":[{"emailAddress":"test2@hotmail.com","action":"failed","status":"5.5.0","diagnosticCode":"smtp;550 Requested action not taken: mailbox unavailable (12354213:4278:-2147467259)"}],"timestamp":"2017-03-11T12:41:17.000Z","feedbackId":"99999999999999-06c3c06c-0658-11e7-9dc3-2fc31251d7fd-000000","reportingMTA":"dns;COL004-MC5F23.hotmail.com"},"mail":{"timestamp":"2017-03-11T12:41:12.000Z","source":"testep@test.com","sourceArn":"arn:aws:ses:eu-west-1:292121581101:identity/test.com","sourceIp":"8.8.8.8","sendingAccountId":"292121581101","messageId":"0102015abd631fad-9d31386e-caba-4f09-8b68-4beae4d6769b-000000","destination":["test2@hotmail.com"],"headersTruncated":false,"headers":[{"name":"Received","value":"from testep.test.com ([8.8.8.8]) by email-smtp.amazonaws.com with SMTP (SimpleEmailService-1868680137) id mbXpJ9tgkRgJVr9L1G6n for test2@hotmail.com; Sat, 11 Mar 2017 12:41:14 +0000 (UTC)"},{"name":"Message-ID","value":"<7b046a4f6905c16cf7273154694c15db@www.testep.test.com>"},{"name":"Date","value":"Sat, 11 Mar 2017 13:41:12 +0100"},{"name":"Subject","value":"[testep] Modificación de Planning"},{"name":"From","value":"Buzón test testep <testep@test.com>"},{"name":"To","value":"test2@hotmail.com"},{"name":"MIME-Version","value":"1.0"},{"name":"Content-Type","value":"text/html; charset=utf-8"},{"name":"Content-Transfer-Encoding","value":"quoted-printable"}],"commonHeaders":{"from":["Buzón test testep <testep@test.com>"],"date":"Sat, 11 Mar 2017 13:41:12 +0100","to":["test2@hotmail.com"],"messageId":"<7b046a4f6905c16cf7273154694c15db@www.testep.test.com>","subject":"[testep] Modificación de Planning"}}}',),
-        # ('{"notificationType":"Bounce","bounce":{"bounceType":"Permanent","bounceSubType":"General","bouncedRecipients":[{"emailAddress":"test3@gmail.com","action":"failed","status":"5.1.1","diagnosticCode":"smtp; 550-5.1.1 The email account that you tried to reach does not exist. Please try550-5.1.1 double-checking the recipients email address for typos or550-5.1.1 unnecessary spaces. Learn more at550 5.1.1  https://support.google.com/mail/?p=NoSuchUser w39si16490768wrc.140 - gsmtp"}],"timestamp":"2017-03-11T10:16:45.684Z","feedbackId":"0102015abcded916-83ac9c35-9e83-48ce-af65-213cf89c055c-000000","remoteMtaIp":"209.85.203.26","reportingMTA":"dsn; a4-3.smtp-out.eu-west-1.amazonses.com"},"mail":{"timestamp":"2017-03-11T10:16:45.000Z","source":"testep@test.com","sourceArn":"arn:aws:ses:eu-west-1:292121581101:identity/test.com","sourceIp":"8.8.8.8","sendingAccountId":"292121581101","messageId":"0102015abcded731-ff621a1d-9739-41ba-abf1-e83fe3996db6-000000","destination":["test3@gmail.com"],"headersTruncated":false,"headers":[{"name":"Received","value":"from testep.test.com ([8.8.8.8]) by email-smtp.amazonaws.com with SMTP (SimpleEmailService-1868680137) id 3p15BrVKIpbDJxu5O8BF for test3@gmail.com; Sat, 11 Mar 2017 10:16:45 +0000 (UTC)"},{"name":"Message-ID","value":"<0092fc3921cf6e9767c111337ed55b6e@www.testep.test.com>"},{"name":"Date","value":"Sat, 11 Mar 2017 11:16:44 +0100"},{"name":"Subject","value":"[testep] Modificación de Planning"},{"name":"From","value":"Buzón test testep <testep@test.com>"},{"name":"To","value":"test3@gmail.com"},{"name":"MIME-Version","value":"1.0"},{"name":"Content-Type","value":"text/html; charset=utf-8"},{"name":"Content-Transfer-Encoding","value":"quoted-printable"}],"commonHeaders":{"from":["Buzón test testep <testep@test.com>"],"date":"Sat, 11 Mar 2017 11:16:44 +0100","to":["test3@gmail.com"],"messageId":"<0092fc3921cf6e9767c111337ed55b6e@www.testep.test.com>","subject":"[testep] Modificación de Planning"}}}',),
-        # ('{"notificationType":"Complaint","complaint":{"complainedRecipients":[{"emailAddress":"complaint@simulator.amazonses.com"}],"timestamp":"2017-03-14T19:13:37.000Z","feedbackId":"0102015ace3d7492-54145f27-08ea-11e7-acab-1b7c5e384cbd-000000","userAgent":"Amazon SES Mailbox Simulator","complaintFeedbackType":"abuse"},"mail":{"timestamp":"2017-03-14T19:13:38.518Z","source":"alessandro@test.com","sourceArn":"arn:aws:ses:eu-west-1:292121581101:identity/test.com","sourceIp":"54.240.197.66","sendingAccountId":"292121581101","messageId":"0102015ace3d6c44-c5003e4b-b7a8-47ec-abf0-49ff8d71a4b7-000000","destination":["complaint@simulator.amazonses.com"],"headersTruncated":false,"headers":[{"name":"From","value":"alessandro@test.com"},{"name":"To","value":"complaint@simulator.amazonses.com"},{"name":"Subject","value":"Test"},{"name":"MIME-Version","value":"1.0"},{"name":"Content-Type","value":"text/plain; charset=UTF-8"},{"name":"Content-Transfer-Encoding","value":"7bit"}],"commonHeaders":{"from":["alessandro@test.com"],"to":["complaint@simulator.amazonses.com"],"subject":"Test"}}}',),
-        # ('{"notificationType":"Delivery", "mail":{ "timestamp":"2014-05-28T22:40:59.638Z", "messageId":"0000014644fe5ef6-9a483358-9170-4cb4-a269-f5dcdf415321-000000", "source":"test@ses-example.com", "destination":[ "success@simulator.amazonses.com", "recipient@ses-example.com" ] }, "delivery":{ "timestamp":"2014-05-28T22:41:01.184Z", "recipients":["success@simulator.amazonses.com"], "processingTimeMillis":1546, "reportingMTA":"a8-70.smtp-out.amazonses.com", "smtpResponse":"250 ok: Message 64111812 accepted" } }',),
-    )
+class AwsRequestServiceBounceTest(CommonTestCase):
+    def test_save_request_bounce_to_db(self):
+        json_response = '{"notificationType":"Bounce","bounce":{"bounceType":"Permanent","bounceSubType":"General",' \
+                        '"bouncedRecipients":[{"emailAddress":"test2@hotmail.com","action":"failed","status":"5.5.0",' \
+                        '"diagnosticCode":"smtp;550 Requested action not taken: mailbox unavailable (' \
+                        '12354213:4278:-2147467259)"}],"timestamp":"2017-03-11T12:41:17.000Z",' \
+                        '"feedbackId":"99999999999999-06c3c06c-0658-11e7-9dc3-2fc31251d7fd-000000",' \
+                        '"reportingMTA":"dns;COL004-MC5F23.hotmail.com"},"mail":{' \
+                        '"timestamp":"2017-03-11T12:41:12.000Z","source":"testep@test.com",' \
+                        '"sourceArn":"arn:aws:ses:eu-west-1:292121581101:identity/test.com","sourceIp":"8.8.8.8",' \
+                        '"sendingAccountId":"292121581101",' \
+                        '"messageId":"0102015abd631fad-9d31386e-caba-4f09-8b68-4beae4d6769b-000000","destination":[' \
+                        '"test2@hotmail.com"],"headersTruncated":false,"headers":[{"name":"Received","value":"from ' \
+                        'testep.test.com ([8.8.8.8]) by email-smtp.amazonaws.com with SMTP (' \
+                        'SimpleEmailService-1868680137) id mbXpJ9tgkRgJVr9L1G6n for test2@hotmail.com; Sat, ' \
+                        '11 Mar 2017 12:41:14 +0000 (UTC)"},{"name":"Message-ID",' \
+                        '"value":"<7b046a4f6905c16cf7273154694c15db@www.testep.test.com>"},{"name":"Date",' \
+                        '"value":"Sat, 11 Mar 2017 13:41:12 +0100"},{"name":"Subject","value":"[testep] Modificación ' \
+                        'de Planning"},{"name":"From","value":"Buzón test testep <testep@test.com>"},{"name":"To",' \
+                        '"value":"test2@hotmail.com"},{"name":"MIME-Version","value":"1.0"},{"name":"Content-Type",' \
+                        '"value":"text/html; charset=utf-8"},{"name":"Content-Transfer-Encoding",' \
+                        '"value":"quoted-printable"}],"commonHeaders":{"from":["Buzón test testep ' \
+                        '<testep@test.com>"],"date":"Sat, 11 Mar 2017 13:41:12 +0100","to":["test2@hotmail.com"],' \
+                        '"messageId":"<7b046a4f6905c16cf7273154694c15db@www.testep.test.com>","subject":"[testep] ' \
+                        'Modificación de Planning"}}}';
+        AwsRequestService(json_response)
+        with db_session:
+            destinations = self.database.Destination.select()
+            for destination in destinations:
+                self.assertEqual(destination.email, 'test2@hotmail.com')
 
-    @data_provider(responses)
-    def test_save_request_to_db(self, json_response):
-        aws = AwsRequestService(json_response)
-        # self.assertEqual('foo'.upper(), 'FOO')
+    def test_generate_bounce_instance(self):
+        bounce_service = BounceService()
+        bounce_r = json.loads(
+            '{ "bounceType":"Permanent", "bounceSubType":"General", "bouncedRecipients":[ { '
+            '"emailAddress":"test2@hotmail.com", "action":"failed", "status":"5.5.0", "diagnosticCode":"smtp;550 '
+            'Requested action not taken: mailbox unavailable (12354213:4278:-2147467259)" } ], '
+            '"timestamp":"2017-03-11T12:41:17.000Z", '
+            '"feedbackId":"99999999999999-06c3c06c-0658-11e7-9dc3-2fc31251d7fd-000000", '
+            '"reportingMTA":"dns;COL004-MC5F23.hotmail.com" }')
+        bounce = bounce_service.generate_bounce_instance(bounce_r)
 
+        self.assertEqual(bounce.bounce_type, 'Permanent')
+        self.assertEqual(bounce.bounce_sub_type, 'General')
+        self.assertEqual(bounce.feedback_id, '99999999999999-06c3c06c-0658-11e7-9dc3-2fc31251d7fd-000000')
+        self.assertEqual(bounce.reporting_mta, 'dns;COL004-MC5F23.hotmail.com')
+
+    def test_save_relationship_with_destination(self):
+        with db_session:
+            destination = self.database.Destination(email='test@test.com')
+            mail = self.database.Mail(timestamp=datetime.datetime.now())
+            bounce = self.database.Bounce(timestamp=datetime.datetime.now())
+
+        bounce_service = BounceService()
+        bounce_service.save_relationship_with_destination(destination.id, mail.id, bounce.id)
+
+        with db_session:
+            destinations = self.database.Destination.select(lambda d: d.email == 'test@test.com')
+            for destination in destinations:
+                for mail in destination.mails:
+                    self.assertEqual(1, mail.id)
+                for bounce in destination.bounces:
+                    self.assertEqual(1, bounce.id)

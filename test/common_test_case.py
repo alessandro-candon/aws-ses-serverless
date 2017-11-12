@@ -1,15 +1,13 @@
 import unittest
 
-from configuration import ENV
-from entity.schema import  define_database
+from entity.schema import define_database
+
+ENV = 'test'
 
 
 class CommonTestCase(unittest.TestCase):
-    def __init__(self, methodName='test'):
-        super().__init__(methodName)
-        self.database = define_database(ENV)
-
     def setUp(self):
+        self.database = define_database(ENV)
         print("SetUp test")
 
     def tearDown(self):

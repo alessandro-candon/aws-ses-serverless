@@ -9,7 +9,6 @@ BOUNCE = 'Bounce'
 
 
 class BounceService:
-
     def __init__(self):
         self.database = define_database(ENV)
 
@@ -17,7 +16,8 @@ class BounceService:
         bounce = self.generate_bounce_instance(bounce_r)
         destination_service = DestinationService()
         for recipient in bounce_r['bouncedRecipients']:
-            self.save_destination_data(destination_service, recipient, mail, bounce)
+            destination = destination_service.get_destination_or_create_if_not_exist(recipient['emailAddress'])
+            self.save_relationship_with_destination(destination.id, mail.id, bounce.id)
 
     @db_session
     def generate_bounce_instance(self, bounce_r):
@@ -29,10 +29,9 @@ class BounceService:
         return bounce
 
     @db_session
-    def save_destination_data(self, destination_service, recipient, mail, bounce):
-        destination = destination_service.get_destination_or_create_if_not_exist(recipient['emailAddress'])
-        # destination.mail.add(mail)
+    def save_relationship_with_destination(self, destination_id: int, mail_id: int, bounce_id: int):
+        destination = self.database.Destination[destination_id]
+        mail = self.database.Mail[mail_id]
+        destination.mails.add(mail)
+        bounce = self.database.Bounce[bounce_id]
         destination.bounces.add(bounce)
-    #
-    # def add_destination_shortcut_data(self, subtype):
-    #     pass

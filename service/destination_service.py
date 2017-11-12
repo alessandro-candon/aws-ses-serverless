@@ -14,5 +14,4 @@ class DestinationService:
         destination = self.database.Destination.get(email=email_address)
         if not destination:
             destination = self.database.Destination(email=email_address)
-        self.database.commit()
         return destination
